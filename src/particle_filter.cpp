@@ -73,6 +73,28 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
 	//   implement this method and use it as a helper during the updateWeights phase.
 
+	for (unsigned i = 0; i < observations.size(); ++i) {
+
+    // Define temporary variables for finding predicted measurements
+    double dist_current = 1e6;
+    int nearest_landmark = -1;
+
+    // Iterate through predicted measurements to find nearest landmarks
+    for (unsigned j = 0; j < predicted.size(); ++j) {
+
+      // Calculate Euclidian distance between observations and predictions
+      double dist_eucl = dist(observations[i].x, observations[i].y, predicted[j].x, predicted[j].y);
+
+      // assign min
+      if (dist_eucl < dist_current) {
+        dist_current = dist_eucl;
+        nearest_landmark = j;
+      }
+    }
+    // assign the closest id to the obeservation
+    observations[i].id = predicted[nearest_landmark].id;
+  }
+
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -88,12 +110,26 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33. Note that you'll need to switch the minus sign in that equation to a plus to account
 	//   for the fact that the map's y-axis actually points downwards.)
 	//   http://planning.cs.uiuc.edu/node99.html
+
 }
 
 void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight.
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+
+	std::default_random_engine generator;
+	std::discrete_distribution<int> dist(weights.begin(), weights.end());
+
+	std::vector<Particle> new_particles;
+	new_particles.reserve(particles.size());
+
+	for (int i = 0; i < particles.size(); i++) {
+		int sampled_index = dist(generator);
+		new_particles.push_back(particles[sampled_index]);
+	}
+
+	particles = new_particles;
 
 }
 
